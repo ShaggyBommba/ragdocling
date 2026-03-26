@@ -1,0 +1,88 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dacke"
+version = "0.1.0"
+description = "A brief description"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.7.0",
+    "sqlalchemy[asyncio]>=2.0.23",
+    "asyncpg>=0.29.0",
+    "redis>=5.0.1",
+    "boto3>=1.34.0",
+    "python-dotenv>=1.0.0",
+    "minio>=7.2.0",
+    "pydantic-settings>=2.4.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.27.0",
+    "docling>=2.0.0",
+    "celery>=5.3.6",
+    "python-multipart>=0.0.9",
+    "greenlet>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-cov>=4.1.0",
+    "httpx>=0.27.0",
+    "ruff>=0.9.0",
+    "mypy>=1.11.0",
+    "black>=24.0.0",
+    "aiosqlite>=0.20.0",
+    "greenlet>=3.0.3",
+]
+db = ["alembic>=1.13.0", "greenlet>=3.0.3"]
+s3 = ["moto[s3]>=5.0.0"]
+
+[project.scripts]
+dacke = "dacke.main:main"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+# E/F: Basic, I: Isort (sorting), B: Bugbear (common bugs), UP: Upgrade (modern syntax)
+select = ["E", "F", "I", "B", "UP", "N"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["dacke"]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+python_version = "3.10"
+disallow_untyped_decorators = false
+
+[[tool.mypy.overrides]]
+module = "minio.*"
+ignore_missing_imports = true
+follow_imports = "skip"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore:.*has conflict with protected namespace \"model_\":UserWarning",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dacke"]
+
+[tool.pyright]
+include = ["src", "tests"]
+# This tells Pyright where to look for your code vs dependencies
+venvPath = "."
+venv = ".venv"
+# Keep these as false to reduce noise in a monster repo
+reportUnknownMemberType = false
+reportUnknownArgumentType = false
