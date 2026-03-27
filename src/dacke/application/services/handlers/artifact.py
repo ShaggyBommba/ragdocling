@@ -3,12 +3,12 @@
 import logging
 from typing import Any
 
-from pydantic import HttpUrl
+from pydantic import AnyUrl
 
 from dacke.application.ports.extractor import Extractor
 from dacke.application.ports.handler import Handler
 from dacke.domain.aggregates.document import Document
-from dacke.domain.values.artifact import ArtifactID
+from dacke.domain.values.artifact import ArtifactID, StoragePath
 from dacke.domain.values.collection import CollectionID
 from dacke.infrastructure.pipeline.registry import TransformerRegistry
 from dacke.infrastructure.repositories.providers.minio.repo_artifact import (
@@ -66,18 +66,27 @@ class ConvertArtifactToDocumentHandler(Handler[Any]):
 
         uri = await self.blob_repo.get_presigned_url(artifact.address)
         if uri is None:
-            logger.warning(f"Presigned URL for artifact {artifact_id} not found for conversion")
+            logger.warning(
+                f"Presigned URL for artifact {artifact_id} not found for conversion"
+            )
             return None
 
         pipelines = await self.pipeline_repo.get_pipelines_by_collection(collection_id)
         logger.info(
             f"Artifact {artifact_id} ready for conversion with {len(pipelines)} configured pipelines"
         )
-
-        document = await self.pipeline_extractor.extract(pipelines, HttpUrl(uri))
+        pipeline = pipelines[0]  # TODO: Use get production pipeline method instead
+        document = await self.pipeline_extractor.extract(
+            folder=StoragePath(f"collections/{collection_id}/artifacts/{artifact_id}"),
+            pipeline_id=pipeline.identity,
+            extraction_settings=pipeline.extraction_settings,
+            url=AnyUrl(uri),
+        )
 
         for name, cls in self.transformer_registry.all().items():
-            logger.info(f"Applying transformer '{name}' to document from artifact {artifact_id}")
+            logger.info(
+                f"Applying transformer '{name}' to document from artifact {artifact_id}"
+            )
             transformer_instance = cls()
             document = await transformer_instance.transform(document)
 

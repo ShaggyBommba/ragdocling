@@ -1,6 +1,16 @@
 """Collection repository implementation."""
 
-from typing import Any, Optional
+from typing import Any
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import selectinload
+from sqlalchemy.pool import NullPool
 
 from dacke.application.ports.repository import AclLayer, Repository
 from dacke.domain.aggregates.collection import Collection
@@ -11,15 +21,6 @@ from dacke.infrastructure.exceptions import (
     DatabaseOperationError,
 )
 from dacke.infrastructure.repositories.providers.postgres.models import CollectionsTable
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import (
-    AsyncEngine,
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
-from sqlalchemy.orm import selectinload
-from sqlalchemy.pool import NullPool
 
 
 class CollectionAcl(AclLayer[Collection, CollectionsTable]):
@@ -33,11 +34,11 @@ class CollectionAcl(AclLayer[Collection, CollectionsTable]):
             identity=CollectionID.from_hex(orm.id),
             workspace_id=WorkspaceID.from_hex(orm.workspace_id),
             name=orm.name,
-            artifact_ids=[
-                ArtifactID.from_hex(artifact.id) for artifact in orm.artifacts
-            ]
-            if orm.artifacts
-            else [],
+            artifact_ids=(
+                [ArtifactID.from_hex(artifact.id) for artifact in orm.artifacts]
+                if orm.artifacts
+                else []
+            ),
             max_count_files=orm.max_count_files,
             max_file_size_kb=orm.max_file_size_kb,
             created_at=orm.created_at,
@@ -63,8 +64,8 @@ class CollectionRepository(Repository):
 
     def __init__(self, connection_string: str):
         self.connection_string = connection_string
-        self._client: Optional[async_sessionmaker[AsyncSession]] = None
-        self._engine: Optional[AsyncEngine] = None
+        self._client: async_sessionmaker[AsyncSession] | None = None
+        self._engine: AsyncEngine | None = None
 
     async def _connect(self) -> None:
         """Connect to database."""
@@ -108,7 +109,7 @@ class CollectionRepository(Repository):
 
     async def get_collection_by_id(
         self, collection_id: CollectionID
-    ) -> Optional[Collection]:
+    ) -> Collection | None:
         """Retrieve a collection by ID."""
         if self._client is None:
             await self._connect()
@@ -131,9 +132,7 @@ class CollectionRepository(Repository):
         except Exception as e:
             raise DatabaseOperationError(f"Failed to retrieve collection: {e}") from e
 
-    async def get_collection_by_name(
-        self, collection_name: str
-    ) -> Optional[Collection]:
+    async def get_collection_by_name(self, collection_name: str) -> Collection | None:
         """Retrieve a collection by name."""
         if self._client is None:
             await self._connect()

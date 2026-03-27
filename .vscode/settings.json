@@ -1,0 +1,58 @@
+{
+  "workbench.colorTheme": "Solarized Dark",
+  "workbench.iconTheme": "vs-seti",
+
+  "cSpell.words": ["dacke", "Docling", "dotenv", "pydantic", "uv", "alembic", "psycopg2", "sqlalchemy", "psutil", "datamodel", "chunker", "codeformulav"],
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.analysis.extraPaths": ["${workspaceFolder}/src"],
+
+  // --- Formatting ---
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "charliermarsh.ruff",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+  "[jupyter]": {
+    "editor.formatOnSave": false
+  },
+
+  // --- Jupyter ---
+  "jupyter.kernels.filter": [],
+  "jupyter.notebookFileRoot": "${workspaceFolder}",
+  "jupyter.jupyterLaunchTimeout": 60000,
+  "jupyter.widgetScriptSources": ["jsdelivr.com", "unpkg.com"],
+
+  // --- Linting ---
+  "ruff.enable": true,
+  "ruff.lint.enable": true,
+  "mypy-type-checker.enabled": false,
+
+  // --- Basic ---
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    "**/*.pyo": true,
+    "**/.pytest_cache": true,
+    "**/.mypy_cache": true,
+    "**/.ruff_cache": true,
+    "**/*.egg-info": true,
+    "**/.eggs": true,
+    "**/.DS_Store": true,
+    ".venv": false,
+    "**/*.dist-info": true,
+    "uv.lock": false,
+    ".python-version": true
+  },
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".venv": true,
+    "uv.lock": true,
+    "alembic/versions": false
+  }
+}

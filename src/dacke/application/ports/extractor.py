@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar
 
-from pydantic import HttpUrl
+from pydantic import AnyUrl
+
+from dacke.domain.values.artifact import StoragePath
+from dacke.domain.values.pipeline import PipelineID
 
 # Define Type Variables for Document and Response
 ConfigType = TypeVar("ConfigType")
@@ -16,6 +19,12 @@ class Extractor(ABC, Generic[ConfigType, ResponseType]):
     """
 
     @abstractmethod
-    async def extract(self, config: ConfigType, url: HttpUrl) -> ResponseType:
+    async def extract(
+        self,
+        folder: StoragePath,
+        pipeline_id: PipelineID,
+        extraction_settings: ConfigType,
+        url: AnyUrl,
+    ) -> ResponseType:
         """Execute the extraction logic for this specific extractor."""
         pass

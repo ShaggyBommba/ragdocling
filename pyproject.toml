@@ -24,6 +24,10 @@ dependencies = [
     "celery>=5.3.6",
     "python-multipart>=0.0.9",
     "greenlet>=3.0.0",
+    "mlx>=0.31.1",
+    "mlx-lm>=0.29.1",
+    "mlx-vlm>=0.3.9",
+    "easyocr>=1.7.2",
 ]
 
 [project.optional-dependencies]

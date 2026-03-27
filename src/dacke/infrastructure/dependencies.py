@@ -20,7 +20,9 @@ from dacke.application.services.usecases import (
     PromotePipelineUseCase,
     UploadFileUseCase,
 )
-from dacke.application.services.usecases.collection import ListArtifactsInCollectionUseCase
+from dacke.application.services.usecases.collection import (
+    ListArtifactsInCollectionUseCase,
+)
 from dacke.domain.events.artifact import ArtifactDeletedEvent, ArtifactUploadedEvent
 from dacke.infrastructure.bus import DomainEventBus
 from dacke.infrastructure.celery.app import celery_app
@@ -81,7 +83,8 @@ class App:
             self.bus.register(
                 event,
                 lambda e: celery_app.send_task(
-                    f"{e.EVENT_TOPIC}.{e.EVENT_NAME}.{e.EVENT_VERSION}", kwargs=e.payload
+                    f"{e.EVENT_TOPIC}.{e.EVENT_NAME}.{e.EVENT_VERSION}",
+                    kwargs=e.payload,
                 ),
             )
 
@@ -136,10 +139,12 @@ class App:
             )
         )
 
-        self.cleanup_artifact_handler: CleanupArtifactDataHandler = CleanupArtifactDataHandler(
-            pipeline_repo=self.pipeline_repository,
-            artifact_repo=self.artifact_metadata_repository,
-            blob_repo=self.artifact_blob_repository,
+        self.cleanup_artifact_handler: CleanupArtifactDataHandler = (
+            CleanupArtifactDataHandler(
+                pipeline_repo=self.pipeline_repository,
+                artifact_repo=self.artifact_metadata_repository,
+                blob_repo=self.artifact_blob_repository,
+            )
         )
 
     async def startup(self) -> None:
@@ -151,7 +156,9 @@ class App:
 
         # Start Celery worker in background thread
         logger.info("Starting Celery worker")
-        self._celery_worker_thread = threading.Thread(target=self._run_celery_worker, daemon=True)
+        self._celery_worker_thread = threading.Thread(
+            target=self._run_celery_worker, daemon=True
+        )
         self._celery_worker_thread.start()
 
     def _run_celery_worker(self) -> None:

@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import UUID, uuid4, uuid5
 
 from dacke.domain.values.collection import CollectionID
+from dacke.domain.values.pipeline import PipelineID
 
 
 @dataclass(frozen=True, slots=True)
@@ -17,7 +18,9 @@ class ArtifactID:
         return cls(value=uuid4())
 
     @classmethod
-    def from_checksum(cls, checksum: str, namespace: CollectionID) -> "ArtifactID":
+    def from_checksum(
+        cls, checksum: str, namespace: CollectionID | PipelineID
+    ) -> "ArtifactID":
         """Generate a deterministic ArtifactID from a checksum and namespace."""
         return cls(value=uuid5(namespace.value, checksum.lower().strip()))
 
@@ -92,7 +95,9 @@ class StoragePath:  # Renamed from Prefix
 
     def at(self, *parts: str) -> "StoragePath":
         """Returns a new path deeper within the current prefix."""
-        new_prefix = str(Path(self.prefix) / Path(*parts)) if self.prefix else "/".join(parts)
+        new_prefix = (
+            str(Path(self.prefix) / Path(*parts)) if self.prefix else "/".join(parts)
+        )
         return StoragePath(bucket=self.bucket, prefix=new_prefix)
 
     def parent(self) -> "StoragePath":
@@ -100,7 +105,9 @@ class StoragePath:  # Renamed from Prefix
         if not self.prefix:
             return self
         parent_path = str(Path(self.prefix).parent)
-        return StoragePath(bucket=self.bucket, prefix="" if parent_path == "." else parent_path)
+        return StoragePath(
+            bucket=self.bucket, prefix="" if parent_path == "." else parent_path
+        )
 
     def resolve(self, filename: str) -> "ObjectAddress":
         """Combines the current path with a filename to create a specific address."""
