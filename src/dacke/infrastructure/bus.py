@@ -42,7 +42,9 @@ class DomainEventBus(EventPublisher):
                         await handler(event)
                     else:
                         handler(event)
-                logger.debug(f"Executed {len(handlers)} local handlers for {event_name}")
+                logger.debug(
+                    f"Executed {len(handlers)} local handlers for {event_name}"
+                )
             else:
                 logger.debug(f"No local handlers registered for {event_name}")
         except Exception as e:

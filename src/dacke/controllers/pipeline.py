@@ -21,7 +21,9 @@ def application() -> App:
     return app
 
 
-async def _get_collection_or_404(app: App, workspace_id: str, collection_id: str) -> Collection:
+async def _get_collection_or_404(
+    app: App, workspace_id: str, collection_id: str
+) -> Collection:
     ws_identity = WorkspaceID.from_hex(workspace_id)
     workspace = await app.workspace_repository.get_by_id(ws_identity)
     if workspace is None:
@@ -157,7 +159,9 @@ async def promote_pipeline(
         pipeline = await app.pipeline_repository.get_pipeline_by_id(identity)
         if pipeline is None or str(pipeline.collection_id) != collection_id:
             raise HTTPException(status_code=404, detail="Pipeline not found")
-        await app.pipeline_repository.change_lifecycle(identity, PipelineLifecycle.PRODUCTION)
+        await app.pipeline_repository.change_lifecycle(
+            identity, PipelineLifecycle.PRODUCTION
+        )
         updated = await app.pipeline_repository.get_pipeline_by_id(identity)
         if updated is None:
             raise HTTPException(status_code=404, detail="Pipeline not found")
@@ -183,7 +187,9 @@ async def demote_pipeline(
         pipeline = await app.pipeline_repository.get_pipeline_by_id(identity)
         if pipeline is None or str(pipeline.collection_id) != collection_id:
             raise HTTPException(status_code=404, detail="Pipeline not found")
-        await app.pipeline_repository.change_lifecycle(identity, PipelineLifecycle.STAGING)
+        await app.pipeline_repository.change_lifecycle(
+            identity, PipelineLifecycle.STAGING
+        )
         updated = await app.pipeline_repository.get_pipeline_by_id(identity)
         if updated is None:
             raise HTTPException(status_code=404, detail="Pipeline not found")

@@ -50,7 +50,8 @@ async def list_collections(
 ) -> list[CollectionDTO]:
     try:
         await _workspace_exists_or_404(app, workspace_id)
-        items = await app.collection_repository.list_collections()
+        id = WorkspaceID.from_hex(workspace_id)
+        items = await app.collection_repository.list_collections(id)
         return [CollectionDTO.from_domain(item) for item in items]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -67,7 +68,9 @@ async def list_artifacts_in_collection(
         identity = CollectionID.from_hex(collection_id)
         results = [
             str(artifact_id)
-            for artifact_id in await app.list_artifacts_in_collection_use_case.execute(identity)
+            for artifact_id in await app.list_artifacts_in_collection_use_case.execute(
+                identity
+            )
             or []
         ]
         return results

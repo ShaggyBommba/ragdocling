@@ -1,6 +1,7 @@
 """Celery application configuration."""
 
 from celery import Celery
+
 from dacke.domain.events.artifact import ArtifactDeletedEvent, ArtifactUploadedEvent
 from dacke.infrastructure.config import AppSettings
 
@@ -13,6 +14,7 @@ celery_app = Celery(
 )
 
 celery_app.conf.update(
+    worker_pool="solo",
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
@@ -23,6 +25,7 @@ celery_app.conf.update(
     task_soft_time_limit=25 * 60,
     worker_prefetch_multiplier=1,
     worker_max_tasks_per_child=1000,
+    loglevel="INFO",
 )
 
 celery_app.conf.task_routes = {
@@ -31,9 +34,6 @@ celery_app.conf.task_routes = {
     },
     f"{ArtifactDeletedEvent.EVENT_TOPIC}.{ArtifactDeletedEvent.EVENT_NAME}.{ArtifactDeletedEvent.EVENT_VERSION}": {
         "queue": f"{ArtifactDeletedEvent.EVENT_TOPIC}_{ArtifactDeletedEvent.EVENT_VERSION}"
-    },
-    f"{ArtifactUploadedEvent.EVENT_TOPIC}.{ArtifactUploadedEvent.EVENT_NAME}.{ArtifactUploadedEvent.EVENT_VERSION}": {
-        "queue": f"{ArtifactUploadedEvent.EVENT_TOPIC}_{ArtifactUploadedEvent.EVENT_VERSION}"
     },
 }
 

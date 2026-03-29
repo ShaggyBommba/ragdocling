@@ -145,13 +145,13 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
         serializer = Serializer()
 
         tokenizer_model: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-            "sentence-transformers/all-MiniLM-L6-v2",
+            config.embedding.model,
             use_fast=True,
         )  # type: ignore
 
         tokenizer = HuggingFaceTokenizer(
             tokenizer=tokenizer_model,
-            max_tokens=512,
+            max_tokens=config.embedding.max_tokens,
         )
 
         chunker = HybridChunker(
@@ -182,7 +182,6 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
                 metadata={"caption": item.caption_text(document)},
                 content=Content.from_csv(content),
             )
-            logging.info(item.model_dump_json(indent=2))
 
             assert (
                 attachment is not None

@@ -178,7 +178,7 @@ class CollectionRepository(Repository):
         except Exception as e:
             raise DatabaseOperationError(f"Failed to delete collection: {e}") from e
 
-    async def list_collections(self) -> list[Collection]:
+    async def list_collections(self, workspace_id: WorkspaceID) -> list[Collection]:
         """List all collections."""
         if self._client is None:
             await self._connect()
@@ -188,9 +188,11 @@ class CollectionRepository(Repository):
             ), "_client should be initialized after _connect"
             async with self._client() as session:
                 result = await session.execute(
-                    select(CollectionsTable).options(
+                    select(CollectionsTable)
+                    .options(
                         selectinload(CollectionsTable.artifacts),
                     )
+                    .where(CollectionsTable.workspace_id == str(workspace_id))
                 )
                 orm_list = result.unique().scalars().all()
                 return [CollectionAcl.to_domain(orm) for orm in orm_list]

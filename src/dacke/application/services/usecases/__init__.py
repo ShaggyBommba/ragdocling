@@ -1,10 +1,6 @@
 from .artifact import DeleteFileUseCase, UploadFileUseCase
 from .collection import CreateCollectionUseCase, ListArtifactsInCollectionUseCase
-from .pipeline import (
-    DemotePipelineUseCase,
-    GetPipelineInLifecycleUseCase,
-    PromotePipelineUseCase,
-)
+from .pipeline import DemotePipelineUseCase
 from .workspace import CreateWorkspaceUseCase
 
 __all__ = [
@@ -13,7 +9,5 @@ __all__ = [
     "ListArtifactsInCollectionUseCase",
     "UploadFileUseCase",
     "DeleteFileUseCase",
-    "PromotePipelineUseCase",
     "DemotePipelineUseCase",
-    "GetPipelineInLifecycleUseCase",
 ]

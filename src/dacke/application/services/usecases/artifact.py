@@ -33,6 +33,10 @@ class UploadFileUseCase(UseCase[ArtifactUploadDTO, ArtifactDTO]):
         artifact = dto.to_domain()
         collection_id = CollectionID.from_hex(dto.collection_id)
 
+        existing = await self.artifact_repository.get_artifact_by_id(artifact.identity)
+        if existing is not None:
+            return ArtifactDTO.from_domain(existing)
+
         try:
             await self.blob_repository.save_blob(artifact.as_blob)
             await self.artifact_repository.save_artifact(artifact, collection_id)

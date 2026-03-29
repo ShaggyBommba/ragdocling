@@ -1,7 +1,6 @@
-from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar, Optional
 import logging
-
+from abc import ABC, abstractmethod
+from typing import Any, Generic, TypeVar
 
 logger = logging.getLogger(__name__)
 
@@ -12,17 +11,17 @@ OrmT = TypeVar("OrmT", bound=object)
 
 class AclLayer(ABC, Generic[DomainT, OrmT]):
     @staticmethod
-    def to_domain(orm: OrmT, *args, **kwargs) -> DomainT:
+    def to_domain(orm: OrmT, *args: Any, **kwargs: Any) -> DomainT:
         raise NotImplementedError
 
     @staticmethod
-    def from_domain(domain: DomainT, *args, **kwargs) -> OrmT:
+    def from_domain(domain: DomainT, *args: Any, **kwargs: Any) -> OrmT:
         raise NotImplementedError
 
 
 class Repository(ABC):
-    def __init__(self, *args, **kwargs):
-        self._client: Optional[Any] = None
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        self._client: Any | None = None
 
     # Lifecycle methods
     async def startup(self) -> None:
@@ -42,7 +41,7 @@ class Repository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    async def _connect(self, *args, **kwargs) -> None:
+    async def _connect(self, *args: Any, **kwargs: Any) -> None:
         raise NotImplementedError
 
     # callback methods
@@ -53,6 +52,7 @@ class Repository(ABC):
     async def _on_health(self) -> bool:
         """Override in subclasses for custom health check."""
         logger.info("Repository health check")
+        return True
 
     async def _on_shutdown(self) -> None:
         """Override in subclasses for custom shutdown behavior."""

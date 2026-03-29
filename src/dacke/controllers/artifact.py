@@ -1,14 +1,17 @@
-"""Artifact endpoints."""
-
 import logging
 
 from fastapi import APIRouter, Depends, File, HTTPException, Path, UploadFile
 
 from dacke.application.exceptions import UseCaseError
+
 from dacke.domain.values.artifact import ArtifactID
+
 from dacke.domain.values.collection import CollectionID
+
 from dacke.domain.values.workspace import WorkspaceID
+
 from dacke.dto.artifact import ArtifactDeleteDTO, ArtifactDTO, ArtifactUploadDTO
+
 from dacke.infrastructure.dependencies import App, get_app
 
 logger = logging.getLogger(__name__)
@@ -58,7 +61,9 @@ async def upload_artifact(
 
         result = await app.upload_file_use_case.execute(dto)
 
-        logger.info(f"File {file.filename} uploaded successfully to collection {collection_id}")
+        logger.info(
+            f"File {file.filename} uploaded successfully to collection {collection_id}"
+        )
         return result
 
     except UseCaseError as e:
@@ -87,7 +92,9 @@ async def delete_artifact(
         if file is None:
             raise HTTPException(status_code=404, detail="Artifact not found")
 
-        dto = ArtifactDeleteDTO(artifact_id=str(identity), collection_id=str(file.collection_id))
+        dto = ArtifactDeleteDTO(
+            artifact_id=str(identity), collection_id=str(file.collection_id)
+        )
         await app.delete_file_use_case.execute(dto)
 
         logger.info(f"Artifact {artifact_id} deleted successfully")

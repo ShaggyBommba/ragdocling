@@ -1,0 +1,33 @@
+2026-03-29 14:50:21,901 - dacke.infrastructure.dependencies - INFO - App __init__ starting
+2026-03-29 14:50:21,902 - dacke.infrastructure.dependencies - INFO - Initializing ArtifactBlobRepository
+2026-03-29 14:50:21,902 - dacke.infrastructure.dependencies - INFO - Initializing ArtifactMetadataRepository
+2026-03-29 14:50:21,902 - dacke.infrastructure.dependencies - INFO - Initializing WorkspaceRepository
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing CollectionRepository
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing PipelineRepository
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing DomainEventBus and registering events
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Registering event <class 'dacke.domain.events.artifact.ArtifactUploadedEvent'>
+2026-03-29 14:50:21,903 - dacke.infrastructure.bus - INFO - Registered local handler for ArtifactUploadedEvent
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Registering event <class 'dacke.domain.events.artifact.ArtifactDeletedEvent'>
+2026-03-29 14:50:21,903 - dacke.infrastructure.bus - INFO - Registered local handler for ArtifactDeletedEvent
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing ListArtifactsInCollectionUseCase
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing UploadFileUseCase
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing DeleteFileUseCase
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing CreateWorkspaceUseCase
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing CreateCollectionUseCase
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing DemotePipelineUseCase
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing DoclingExtractor and TransformerRegistry
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - Initializing CleanupArtifactDataHandler
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - App __init__ complete
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - App.startup: artifact_blob_repository.startup
+2026-03-29 14:50:21,903 - dacke.application.ports.repository - INFO - Repository started
+2026-03-29 14:50:21,903 - dacke.infrastructure.dependencies - INFO - App.startup: artifact_metadata_repository.startup
+2026-03-29 14:50:21,937 - dacke.application.ports.repository - INFO - Repository started
+2026-03-29 14:50:21,937 - dacke.infrastructure.dependencies - INFO - App.startup: workspace_repository.startup
+2026-03-29 14:50:21,937 - dacke.application.ports.repository - INFO - Repository started
+2026-03-29 14:50:21,937 - dacke.infrastructure.dependencies - INFO - App.startup: collection_repository.startup
+2026-03-29 14:50:21,937 - dacke.application.ports.repository - INFO - Repository started
+2026-03-29 14:50:21,937 - dacke.infrastructure.dependencies - INFO - App.startup: pipeline_repository.startup
+2026-03-29 14:50:21,937 - dacke.application.ports.repository - INFO - Repository started
+2026-03-29 14:50:21,937 - dacke.infrastructure.dependencies - INFO - App.startup: Starting Celery worker thread
+2026-03-29 14:50:21,937 - dacke.infrastructure.dependencies - INFO - App.startup: Celery worker thread started
+2026-03-29 14:50:21,940 - dacke.infrastructure.dependencies - INFO - Celery worker thread started

@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class ComputeSettings(BaseModel):
-    device: str = "auto"
+    device: str = "auto"  # "auto", "cpu", "cuda", etc.
     num_threads: int = 4
 
 
@@ -15,13 +15,13 @@ class OcrSettings(BaseModel):
 
 class TableSettings(BaseModel):
     enabled: bool = True
-    quality: Literal["fast", "balanced", "accurate"] = "balanced"
+    quality: Literal["fast", "balanced", "accurate"] = "accurate"
 
 
 class EnrichmentSettings(BaseModel):
     code: bool = True
     formulas: bool = True
-    picture_classification: bool = True
+    picture_classification: bool = False
     picture_description: bool = True
 
 
@@ -33,12 +33,12 @@ class ImageSettings(BaseModel):
 
 
 class DescriptionServiceSettings(BaseModel):
-    use_remote_api: bool = False
-    url: str = "http://localhost:1234/v1/chat/completions"
+    use_remote_api: bool = True
+    url: str = "http://localhost:1234/api/v1/chat"
     headers: dict[str, str] = Field(default_factory=dict)
     params: dict[str, Any] = Field(
         default_factory=lambda: {
-            "model": "qwen/qwen3-vl-8b",
+            "model": "qwen3.5-9b-mlx",
             "seed": 42,
             "max_completion_tokens": 200,
         }
@@ -46,6 +46,11 @@ class DescriptionServiceSettings(BaseModel):
     timeout: float = 90.0
     concurrency: int = 1
     prompt: str = "Describe this image in a few sentences. Be concise and accurate."
+
+
+class EmbeddingSettings(BaseModel):
+    model: str = "mlx-community/Qwen3-Embedding-4B-4bit-DWQ"
+    max_tokens: int = 512
 
 
 class PipelineRuntimeSettings(BaseModel):
@@ -69,4 +74,5 @@ class ExtractionSettings(BaseModel):
     description: DescriptionServiceSettings = Field(
         default_factory=DescriptionServiceSettings
     )
+    embedding: EmbeddingSettings = Field(default_factory=EmbeddingSettings)
     runtime: PipelineRuntimeSettings = Field(default_factory=PipelineRuntimeSettings)

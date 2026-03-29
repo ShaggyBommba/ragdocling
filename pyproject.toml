@@ -20,14 +20,15 @@ dependencies = [
     "pydantic-settings>=2.4.0",
     "fastapi>=0.110.0",
     "uvicorn>=0.27.0",
-    "docling>=2.0.0",
-    "celery>=5.3.6",
+    "docling==2.82.0",
+    "celery==5.6.3",
     "python-multipart>=0.0.9",
     "greenlet>=3.0.0",
     "mlx>=0.31.1",
     "mlx-lm>=0.29.1",
     "mlx-vlm>=0.3.9",
     "easyocr>=1.7.2",
+    "python-json-logger==4.1.0"
 ]
 
 [project.optional-dependencies]
