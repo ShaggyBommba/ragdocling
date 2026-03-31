@@ -1,5 +1,4 @@
-from .artifact import ConvertArtifactToDocumentHandler, CleanupArtifactDataHandler
-
+from .artifact import CleanupArtifactDataHandler, ConvertArtifactToDocumentHandler
 
 __all__ = [
     "ConvertArtifactToDocumentHandler",

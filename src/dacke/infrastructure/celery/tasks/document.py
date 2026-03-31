@@ -21,7 +21,7 @@ def convert_artifact_to_document(
 ) -> None:
     try:
         application = get_app()
-        results = asyncio.run(
+        embeddings = asyncio.run(
             application.convert_artifact_handler.handle(
                 artifact_id=ArtifactID.from_hex(artifact_id),
                 collection_id=CollectionID.from_hex(collection_id),
@@ -29,7 +29,8 @@ def convert_artifact_to_document(
         )
 
         logger.info(
-            f"Document conversion completed for artifact {artifact_id} with results: {results}"
+            f"Document conversion completed for artifact {artifact_id}: "
+            f"{len(embeddings) if embeddings else 0} embedding(s) produced"
         )
 
     except Exception as exc:

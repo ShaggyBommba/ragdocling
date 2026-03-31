@@ -30,31 +30,33 @@ class ImageSettings(BaseModel):
     page_images: bool = True
     picture_images: bool = True
     parsed_pages: bool = False
+    min_area_fraction: float = 0.05
 
 
 class DescriptionServiceSettings(BaseModel):
     use_remote_api: bool = True
-    url: str = "http://localhost:1234/api/v1/chat"
+    url: str = "http://localhost:1234/v1/chat/completions"
     headers: dict[str, str] = Field(default_factory=dict)
     params: dict[str, Any] = Field(
         default_factory=lambda: {
-            "model": "qwen3.5-9b-mlx",
+            "model": "qwen3-vl-8b",
             "seed": 42,
-            "max_completion_tokens": 200,
+            "max_completion_tokens": 500,
         }
     )
-    timeout: float = 90.0
+    timeout: float = 180.0
     concurrency: int = 1
     prompt: str = "Describe this image in a few sentences. Be concise and accurate."
 
 
 class EmbeddingSettings(BaseModel):
-    model: str = "mlx-community/Qwen3-Embedding-4B-4bit-DWQ"
+    model: str = "text-embedding-embeddinggemma-300m"
+    tokenizer_model: str = "BAAI/bge-small-en-v1.5"
     max_tokens: int = 512
 
 
 class PipelineRuntimeSettings(BaseModel):
-    document_timeout: float | None = 120.0
+    document_timeout: float | None = 180.0
     artifacts_path: str | None = None
     allow_external_plugins: bool = False
     force_backend_text: bool = False

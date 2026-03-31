@@ -1,6 +1,6 @@
 import hashlib
 
-from pydantic import BaseModel
+from pydantic import AnyUrl, BaseModel
 
 from dacke.domain.aggregates.artifact import Artifact
 from dacke.domain.values.artifact import ArtifactMetadata, ObjectAddress
@@ -11,6 +11,7 @@ class ArtifactUploadDTO(BaseModel):
     collection_id: str
     file: bytes
     filename: str
+    source: AnyUrl
     content_type: str
 
     def to_domain(self) -> Artifact:
@@ -21,7 +22,7 @@ class ArtifactUploadDTO(BaseModel):
         )
         metadata = ArtifactMetadata.create(
             filename=self.filename,
-            source="upload",
+            source=self.source,
             size_bytes=len(self.file),
             mime_type=self.content_type,
             checksum=hashlib.md5(self.file).hexdigest(),

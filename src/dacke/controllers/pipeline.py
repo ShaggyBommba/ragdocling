@@ -1,12 +1,14 @@
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Body, Depends, HTTPException, Path
+from fastapi.responses import PlainTextResponse
 
 from dacke.domain.aggregates.collection import Collection
 from dacke.domain.values.collection import CollectionID
 from dacke.domain.values.pipeline import PipelineID, PipelineLifecycle
 from dacke.domain.values.workspace import WorkspaceID
 from dacke.dto.pipeline import PipelineDTO
+from dacke.dto.retrieve import RetrieveDTO, RetrieveRequestBody
 from dacke.infrastructure.dependencies import App, get_app
 
 logger = logging.getLogger(__name__)
@@ -166,6 +168,30 @@ async def promote_pipeline(
         if updated is None:
             raise HTTPException(status_code=404, detail="Pipeline not found")
         return PipelineDTO.from_domain(updated)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+
+@router.post("/{pipeline_id}/retrieve", response_class=PlainTextResponse)
+async def retrieve(
+    workspace_id: str = Path(...),
+    collection_id: str = Path(...),
+    pipeline_id: str = Path(...),
+    body: RetrieveRequestBody = Body(...),
+    app: App = Depends(application),
+) -> PlainTextResponse:
+    try:
+        await _get_collection_or_404(app, workspace_id, collection_id)
+        identity = PipelineID.from_hex(pipeline_id)
+        dto = RetrieveDTO(pipeline_id=identity, query=body.query, top_k=body.top_k, reranker=body.reranker, expand_links=body.expand_links, tags=body.tags, origins=body.origins)
+        results = await app.retrieve_use_case.execute(dto)
+        content = "\n\n" + ("═" * 60) + "\n\n"
+        content = content.join(r.text for r in results)
+        return PlainTextResponse(content=content)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e
     except HTTPException:

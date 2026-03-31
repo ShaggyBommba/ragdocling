@@ -4,6 +4,7 @@ from typing import Generic, TypeVar
 from pydantic import AnyUrl
 
 from dacke.domain.values.artifact import StoragePath
+from dacke.domain.values.document import DocumentMetadata
 from dacke.domain.values.pipeline import PipelineID
 
 # Define Type Variables for Document and Response
@@ -25,6 +26,7 @@ class Extractor(ABC, Generic[ConfigType, ResponseType]):
         pipeline_id: PipelineID,
         extraction_settings: ConfigType,
         url: AnyUrl,
+        metadata: DocumentMetadata,
     ) -> ResponseType:
         """Execute the extraction logic for this specific extractor."""
         pass

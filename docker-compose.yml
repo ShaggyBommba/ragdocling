@@ -47,8 +47,20 @@ services:
       timeout: 5s
       retries: 5
 
+  qdrant:                                                                                                                                                                                                                          
+    image: qdrant/qdrant:latest                                                                                                                                                                                                    
+    ports:                                                                                                                                                                                                                         
+      - "${QDRANT_PORT}:6333"
+    volumes:
+      - qdrant_data:/qdrant/storage                                                                                                                                                                                                               
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6333/collections"]
+      interval: 30s
+      timeout: 10s
+      retries: 5         
 
 volumes:
   postgres_data:
+  qdrant_data:
   minio_data:
   redis_data:

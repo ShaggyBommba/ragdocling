@@ -58,7 +58,7 @@ class ArtifactMetadataAcl(AclLayer[Artifact, ArtifactsTable]):
             collection_id=str(collection_id),
             object_address=domain.address.s3_uri,
             filename=domain.metadata.filename,
-            source=domain.metadata.source,
+            source=str(domain.metadata.source),
             size_bytes=domain.metadata.size_bytes,
             mime_type=domain.metadata.mime_type,
             checksum=domain.metadata.checksum,

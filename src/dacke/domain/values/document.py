@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID, uuid4, uuid5
 
+from pydantic import AnyUrl
 from typing_extensions import TypedDict
 
 from dacke.domain.values.pipeline import PipelineID
@@ -43,4 +44,5 @@ class DocumentMetadata(TypedDict):
     """TypedDict for document metadata."""
 
     title: str
-    source_url: str
+    origin: AnyUrl
+    source_url: AnyUrl

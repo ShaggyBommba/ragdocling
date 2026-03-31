@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from uuid import UUID, uuid4, uuid5
 
+from pydantic import AnyUrl
 from typing_extensions import TypedDict
 
 from dacke.domain.values.document import DocumentID
@@ -42,6 +43,11 @@ class ChunkID:
 class ChunkMetadata(TypedDict):
     """TypedDict for chunk metadata."""
 
+    origin: AnyUrl
     order: int | None
     pages: list[int] | None
     title: str | None
+    tags: list[str] | None
+    urls: list[str] | None
+    positive_queries: list[str] | None
+    negative_queries: list[str] | None

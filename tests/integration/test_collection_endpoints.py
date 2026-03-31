@@ -18,7 +18,7 @@ def client() -> Iterator[TestClient]:
 
 
 def _create_workspace(client: TestClient, name: str) -> dict[Any, Any]:
-    response = client.post("/api/v1/workspace", json={"name": name})
+    response = client.post("/api/v1/workspaces", json={"name": name})
     assert response.status_code == 200
     payload = response.json()
     assert isinstance(payload, dict)
@@ -29,8 +29,8 @@ def _create_workspace(client: TestClient, name: str) -> dict[Any, Any]:
 
 def _create_collection(client: TestClient, workspace_id: str, name: str) -> dict[Any, Any]:
     response = client.post(
-        "/api/v1/collection",
-        json={"workspace_id": workspace_id, "name": name},
+        f"/api/v1/workspaces/{workspace_id}/collections",
+        json={"name": name},
     )
     assert response.status_code == 200
     payload = response.json()
@@ -50,8 +50,8 @@ class TestCollectionEndpoints:
 
         collection_name = f"collection-{uuid4().hex[:12]}"
         response = client.post(
-            "/api/v1/collection",
-            json={"workspace_id": workspace["id"], "name": collection_name},
+            f"/api/v1/workspaces/{workspace['id']}/collections",
+            json={"name": collection_name},
         )
 
         assert response.status_code == 200
@@ -68,7 +68,7 @@ class TestCollectionEndpoints:
         collection_name = f"collection-{uuid4().hex[:12]}"
         created = _create_collection(client, workspace["id"], collection_name)
 
-        response = client.get("/api/v1/collection")
+        response = client.get(f"/api/v1/workspaces/{workspace['id']}/collections")
 
         assert response.status_code == 200
         data = response.json()
@@ -82,7 +82,7 @@ class TestCollectionEndpoints:
         collection_name = f"collection-{uuid4().hex[:12]}"
         created = _create_collection(client, workspace["id"], collection_name)
 
-        response = client.get(f"/api/v1/collection/{created['id']}")
+        response = client.get(f"/api/v1/workspaces/{workspace['id']}/collections/{created['id']}")
 
         assert response.status_code == 200
         data = response.json()
@@ -99,7 +99,7 @@ class TestCollectionEndpoints:
 
         new_name = f"collection-renamed-{uuid4().hex[:8]}"
         response = client.put(
-            f"/api/v1/collection/{created['id']}",
+            f"/api/v1/workspaces/{workspace['id']}/collections/{created['id']}",
             json={"name": new_name},
         )
 
@@ -115,7 +115,7 @@ class TestCollectionEndpoints:
         collection_name = f"collection-{uuid4().hex[:12]}"
         created = _create_collection(client, workspace["id"], collection_name)
 
-        response = client.delete(f"/api/v1/collection/{created['id']}")
+        response = client.delete(f"/api/v1/workspaces/{workspace['id']}/collections/{created['id']}")
 
         assert response.status_code == 204
         assert response.text == ""

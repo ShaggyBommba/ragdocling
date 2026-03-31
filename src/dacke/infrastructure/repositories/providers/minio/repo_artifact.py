@@ -4,7 +4,10 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 from io import BytesIO
-from typing import Optional
+
+from minio import Minio
+from minio.error import S3Error
+from pydantic import AnyUrl
 
 from dacke.application.ports.repository import AclLayer, Repository
 from dacke.domain.values.artifact import Blob, ObjectAddress, StoragePath
@@ -12,8 +15,6 @@ from dacke.infrastructure.exceptions import (
     DatabaseConnectionError,
     DatabaseOperationError,
 )
-from minio import Minio
-from minio.error import S3Error
 
 
 class ArtifactBlobAcl(AclLayer[Blob, Blob]):
@@ -44,7 +45,7 @@ class ArtifactBlobRepository(Repository):
         self.endpoint = endpoint
         self.access_key = access_key
         self.secret_key = secret_key
-        self._client: Optional[Minio] = None
+        self._client: Minio | None = None
 
     async def _connect(self) -> None:
         if self._client:
@@ -100,8 +101,8 @@ class ArtifactBlobRepository(Repository):
             raise DatabaseOperationError(f"Failed to save blob: {e}") from e
 
     async def get_blob(
-        self, address: ObjectAddress, media_type: Optional[str] = None
-    ) -> Optional[Blob]:
+        self, address: ObjectAddress, media_type: str | None = None
+    ) -> Blob | None:
         if self._client is None:
             await self._connect()
         try:
@@ -144,7 +145,7 @@ class ArtifactBlobRepository(Repository):
 
     async def get_presigned_url(
         self, address: ObjectAddress, duration_seconds: int = 3600
-    ) -> str:
+    ) -> AnyUrl:
         if self._client is None:
             await self._connect()
         try:

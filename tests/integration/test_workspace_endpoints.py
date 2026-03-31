@@ -18,7 +18,7 @@ def client() -> Iterator[TestClient]:
 
 
 def _create_workspace(client: TestClient, name: str) -> dict[Any, Any]:
-    response = client.post("/api/v1/workspace", json={"name": name})
+    response = client.post("/api/v1/workspaces", json={"name": name})
     assert response.status_code == 200
     payload = response.json()
     assert isinstance(payload, dict)
@@ -33,7 +33,7 @@ class TestWorkspaceEndpoints:
     def test_create_workspace_endpoint(self, client: TestClient) -> None:
         """POST /workspaces/ should create a workspace and return 200."""
         name = f"workspace-{uuid4().hex[:12]}"
-        response = client.post("/api/v1/workspace", json={"name": name})
+        response = client.post("/api/v1/workspaces", json={"name": name})
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == name
@@ -46,7 +46,7 @@ class TestWorkspaceEndpoints:
         name = f"workspace-{uuid4().hex[:12]}"
         created = _create_workspace(client, name)
 
-        response = client.get("/api/v1/workspace")
+        response = client.get("/api/v1/workspaces")
 
         assert response.status_code == 200
         data = response.json()
@@ -59,7 +59,7 @@ class TestWorkspaceEndpoints:
         created = _create_workspace(client, name)
         workspace_id = created["id"]
 
-        response = client.get(f"/api/v1/workspace/{workspace_id}")
+        response = client.get(f"/api/v1/workspaces/{workspace_id}")
 
         assert response.status_code == 200
         data = response.json()
@@ -74,7 +74,7 @@ class TestWorkspaceEndpoints:
         new_name = f"workspace-renamed-{uuid4().hex[:8]}"
 
         response = client.put(
-            f"/api/v1/workspace/{workspace_id}",
+            f"/api/v1/workspaces/{workspace_id}",
             json={"name": new_name},
         )
 
@@ -89,7 +89,7 @@ class TestWorkspaceEndpoints:
         created = _create_workspace(client, name)
         workspace_id = created["id"]
 
-        response = client.delete(f"/api/v1/workspace/{workspace_id}")
+        response = client.delete(f"/api/v1/workspaces/{workspace_id}")
 
         assert response.status_code == 204
         assert response.text == ""

@@ -1,17 +1,8 @@
 from dataclasses import dataclass
-from enum import Enum
+from typing_extensions import TypedDict
 
 from pandas import DataFrame
 from PIL import Image as PILImage
-
-
-class AttachmentTypes(Enum):
-    """Enum representing the type of an attachment."""
-
-    IMAGE = "image"
-    TABLE = "table"
-    CODE = "code"
-    OTHER = "other"
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,3 +44,11 @@ class Content:
     def hash(self) -> str:
         """Returns the checksum of the content."""
         return self.checksum
+
+
+class AttachmentPayload(TypedDict):
+    """Structured payload for an attachment, used in embedding metadata."""
+
+    type: str
+    description: str
+    reference: str

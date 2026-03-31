@@ -1,11 +1,18 @@
 """Celery application configuration."""
 
 from celery import Celery
+from celery.signals import worker_process_init
 
 from dacke.domain.events.artifact import ArtifactDeletedEvent, ArtifactUploadedEvent
 from dacke.infrastructure.config import AppSettings
+from dacke.infrastructure.utility.logging import LoggingSetup
 
 settings = AppSettings()
+
+
+@worker_process_init.connect
+def configure_worker_logging(**kwargs: object) -> None:
+    LoggingSetup.setup(settings.logging)
 
 celery_app = Celery(
     "dacke",

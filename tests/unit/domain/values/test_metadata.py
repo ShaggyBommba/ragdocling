@@ -1,3 +1,5 @@
+from pydantic import AnyUrl
+
 from dacke.domain.values.artifact import ArtifactMetadata
 
 
@@ -5,14 +7,14 @@ class TestArtifactMetadata:
     def test_create_artifact_metadata(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024,
             mime_type="application/pdf",
             checksum="abc123",
             author="john",
         )
         assert metadata.filename == "document.pdf"
-        assert metadata.source == "upload"
+        assert metadata.source == AnyUrl("https://example.com/document.pdf")
         assert metadata.size_bytes == 1024
         assert metadata.mime_type == "application/pdf"
         assert metadata.checksum == "abc123"
@@ -21,7 +23,7 @@ class TestArtifactMetadata:
     def test_create_with_default_author(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024,
             mime_type="application/pdf",
             checksum="abc123",
@@ -31,7 +33,7 @@ class TestArtifactMetadata:
     def test_size_kb_property(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="doc.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=2048,
             mime_type="application/pdf",
             checksum="abc",
@@ -41,7 +43,7 @@ class TestArtifactMetadata:
     def test_size_mb_property(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="doc.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024 * 1024,
             mime_type="application/pdf",
             checksum="abc",
@@ -51,7 +53,7 @@ class TestArtifactMetadata:
     def test_size_kb_fractional(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="doc.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=512,
             mime_type="application/pdf",
             checksum="abc",
@@ -61,7 +63,7 @@ class TestArtifactMetadata:
     def test_size_mb_fractional(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="doc.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=512 * 1024,
             mime_type="application/pdf",
             checksum="abc",
@@ -71,7 +73,7 @@ class TestArtifactMetadata:
     def test_str_representation(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="doc.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024 * 1024,
             mime_type="application/pdf",
             checksum="abc",
@@ -83,27 +85,27 @@ class TestArtifactMetadata:
     def test_repr_representation(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024,
             mime_type="application/pdf",
             checksum="abc123",
         )
         repr_str = repr(metadata)
         assert "document.pdf" in repr_str
-        assert "upload" in repr_str
+        assert "https://example.com/document.pdf" in repr_str
         assert "application/pdf" in repr_str
 
     def test_metadata_is_hashable(self) -> None:
         metadata1 = ArtifactMetadata.create(
             filename="doc.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024,
             mime_type="application/pdf",
             checksum="abc",
         )
         metadata2 = ArtifactMetadata.create(
             filename="doc.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024,
             mime_type="application/pdf",
             checksum="abc",

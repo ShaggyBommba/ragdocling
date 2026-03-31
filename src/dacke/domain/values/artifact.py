@@ -2,6 +2,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import UUID, uuid4, uuid5
 
+from pydantic import AnyUrl
+
 from dacke.domain.values.collection import CollectionID
 from dacke.domain.values.pipeline import PipelineID
 
@@ -45,7 +47,7 @@ class ArtifactMetadata:
     """Value object containing artifact metadata information."""
 
     filename: str
-    source: str
+    source: AnyUrl
     size_bytes: int
     mime_type: str
     checksum: str
@@ -55,7 +57,7 @@ class ArtifactMetadata:
     def create(
         cls,
         filename: str,
-        source: str,
+        source: AnyUrl,
         size_bytes: int,
         mime_type: str,
         checksum: str,

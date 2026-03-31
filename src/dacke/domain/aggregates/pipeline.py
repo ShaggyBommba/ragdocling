@@ -41,19 +41,48 @@ class Pipeline(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
 
     @classmethod
+    def _default_transformations(cls) -> list[TransformerSettings]:
+        return [
+            TransformerSettings(
+                name="PatternMatchTransformer",
+                parameters={
+                    "patterns": {
+                        "doi": r"10\.\d{4,}/\S+",
+                        "email": r"[\w.+-]+@[\w-]+\.[\w.]+",
+                        "arxiv": r"arXiv:\d{4}\.\d{4,5}",
+                    }
+                },
+            ),
+            TransformerSettings(name="UrlExtractTransformer"),
+            TransformerSettings(
+                name="QueryGenerationTransformer",
+                parameters={
+                    "url": "http://localhost:1234/v1/chat/completions",
+                    "params": {
+                        "model": "qwen3.5-9b-mlx",
+                        "max_completion_tokens": 300,
+                        "enable_thinking": False,
+                    },
+                    "timeout": 120.0,
+                    "concurrency": 2,
+                },
+            ),
+        ]
+
+    @classmethod
     def create(
         cls,
         name: str,
         collection_id: CollectionID,
         extraction_settings: ExtractionSettings = ExtractionSettings(),
-        transformations_settings: list[TransformerSettings] = [],
+        transformations_settings: list[TransformerSettings] | None = None,  # None = use defaults
         lifecycle: PipelineLifecycle = PipelineLifecycle.STAGING,
     ) -> "Pipeline":
+        resolved = transformations_settings if transformations_settings is not None else cls._default_transformations()
+
         fingerprint = {
             "extraction": extraction_settings.model_dump_json(),
-            "transformations": [
-                transformer.model_dump_json() for transformer in transformations_settings
-            ],
+            "transformations": [t.model_dump_json() for t in resolved],
             "collection_id": str(collection_id.value),
         }
         serialized = json.dumps(fingerprint, sort_keys=True).encode("utf-8")
@@ -65,7 +94,7 @@ class Pipeline(BaseModel):
             collection_id=collection_id,
             lifecycle=lifecycle,
             extraction_settings=extraction_settings,
-            transformations_settings=transformations_settings,
+            transformations_settings=resolved,
             created_at=datetime.now(),
             updated_at=datetime.now(),
         )

@@ -95,7 +95,7 @@ class TestCollectionRepository:
         workspace_id = WorkspaceID.generate()
         collection = Collection.create("Test Collection", workspace_id)
         await repository.save_collection(collection)
-        collections = await repository.list_collections()
+        collections = await repository.list_collections(workspace_id)
         assert len(collections) >= 1
 
     @pytest.mark.asyncio

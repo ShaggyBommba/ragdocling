@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import AnyUrl, BaseModel
 
 from dacke.domain.entities.attachment import Attachment
 from dacke.domain.values.chunk import ChunkID, ChunkMetadata
@@ -18,6 +18,7 @@ class Chunk(BaseModel):
         content: str,
         document_id: DocumentID,
         reference: str,
+        origin: AnyUrl,
         pages: list[int] | None = None,
         title: str | None = None,
         attachments: list[Attachment] | None = None,
@@ -27,7 +28,16 @@ class Chunk(BaseModel):
             identity=ChunkID.from_ref(reference, namespace=document_id),
             document_id=document_id,
             content=content,
-            metadata=ChunkMetadata(pages=pages, order=None, title=title),
+            metadata=ChunkMetadata(
+                origin=origin,
+                pages=pages,
+                order=None,
+                title=title,
+                tags=None,
+                urls=None,
+                positive_queries=None,
+                negative_queries=None,
+            ),
             attachments=attachments or [],
         )
 

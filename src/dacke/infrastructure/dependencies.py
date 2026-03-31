@@ -21,12 +21,15 @@ from dacke.application.services.usecases import (
 from dacke.application.services.usecases.collection import (
     ListArtifactsInCollectionUseCase,
 )
+from dacke.application.services.usecases.retrieve import RetrieveUseCase
 from dacke.domain.events.artifact import ArtifactDeletedEvent, ArtifactUploadedEvent
 from dacke.infrastructure.bus import DomainEventBus
 from dacke.infrastructure.celery.app import celery_app
 from dacke.infrastructure.config import AppSettings
+from dacke.infrastructure.pipeline.embedder import OpenAIEmbedder
 from dacke.infrastructure.pipeline.extractor import DoclingExtractor
 from dacke.infrastructure.pipeline.registry import TransformerRegistry
+from dacke.infrastructure.pipeline.reranker import OpenAIReranker
 from dacke.infrastructure.repositories.providers.minio.repo_artifact import (
     ArtifactBlobRepository,
 )
@@ -41,6 +44,9 @@ from dacke.infrastructure.repositories.providers.postgres.repo_pipeline import (
 )
 from dacke.infrastructure.repositories.providers.postgres.repo_workspace import (
     WorkspaceRepository,
+)
+from dacke.infrastructure.repositories.providers.qdrant.repo_embedding import (
+    QdrantEmbeddingRepository,
 )
 
 load_dotenv()
@@ -79,6 +85,11 @@ class App:
         logger.info("Initializing PipelineRepository")
         self.pipeline_repository = PipelineRepository(
             connection_string=self.settings.database_url,
+        )
+
+        logger.info("Initializing QdrantEmbeddingRepository")
+        self.embedding_repository = QdrantEmbeddingRepository(
+            qdrant_url=self.settings.qdrant_url,
         )
 
         logger.info("Initializing DomainEventBus and registering events")
@@ -130,9 +141,16 @@ class App:
             pipeline_repository=self.pipeline_repository,
         )
 
-        logger.info("Initializing DoclingExtractor and TransformerRegistry")
+        logger.info(
+            "Initializing DoclingExtractor, TransformerRegistry and OpenAIEmbedder"
+        )
         pipeline_extractor = DoclingExtractor()
         transformation_registry = TransformerRegistry()
+        transformation_registry.discover_transformers(
+            package="dacke.infrastructure.pipeline",
+            folder="transformers",
+        )
+        embedder = OpenAIEmbedder(base_url=self.settings.embedder_base_url)
         self.convert_artifact_handler: ConvertArtifactToDocumentHandler = (
             ConvertArtifactToDocumentHandler(
                 pipeline_extractor=pipeline_extractor,
@@ -140,7 +158,18 @@ class App:
                 pipeline_repo=self.pipeline_repository,
                 artifact_repo=self.artifact_metadata_repository,
                 blob_repo=self.artifact_blob_repository,
+                embedder=embedder,
+                embedding_repo=self.embedding_repository,
             )
+        )
+
+        logger.info("Initializing RetrieveUseCase")
+        reranker = OpenAIReranker()
+        self.retrieve_use_case = RetrieveUseCase(
+            embedder=embedder,
+            embedding_repo=self.embedding_repository,
+            pipeline_repo=self.pipeline_repository,
+            reranker=reranker,
         )
 
         logger.info("Initializing CleanupArtifactDataHandler")
@@ -149,6 +178,7 @@ class App:
                 pipeline_repo=self.pipeline_repository,
                 artifact_repo=self.artifact_metadata_repository,
                 blob_repo=self.artifact_blob_repository,
+                embedding_repo=self.embedding_repository,
             )
         )
         logger.info("App __init__ complete")
@@ -164,6 +194,8 @@ class App:
         await self.collection_repository.startup()
         logger.info("App.startup: pipeline_repository.startup")
         await self.pipeline_repository.startup()
+        logger.info("App.startup: embedding_repository.startup")
+        await self.embedding_repository.startup()
 
         # Start Celery worker in background thread
         logger.info("App.startup: Starting Celery worker thread")
@@ -192,6 +224,7 @@ class App:
         await self.workspace_repository.shutdown()
         await self.collection_repository.shutdown()
         await self.pipeline_repository.shutdown()
+        await self.embedding_repository.shutdown()
 
         # Stop Celery worker
         if self._celery_worker_thread and self._celery_worker_thread.is_alive():
@@ -206,6 +239,7 @@ class App:
             await self.workspace_repository.health(),
             await self.collection_repository.health(),
             await self.pipeline_repository.health(),
+            await self.embedding_repository.health(),
         ]
         return all(checks)
 

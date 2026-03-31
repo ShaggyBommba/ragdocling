@@ -1,72 +1,32 @@
 from abc import ABC, abstractmethod
-from typing import Any, Generic, TypeVar, Optional
-import logging
+from dataclasses import dataclass
 
 
-logger = logging.getLogger(__name__)
+@dataclass
+class RankedResult:
+    index: int
+    score: float
 
 
-DomainT = TypeVar("DomainT", bound=object)
-OrmT = TypeVar("OrmT", bound=object)
+class Reranker(ABC):
+    """Port for reranking services.
 
-
-class AclLayer(ABC, Generic[DomainT, OrmT]):
-    @abstractmethod
-    def to_domain(self, orm: OrmT, *args, **kwargs) -> DomainT:
-        pass
-
-    @abstractmethod
-    def from_domain(self, domain: DomainT, *args, **kwargs) -> OrmT:
-        pass
-
-
-ClientT = TypeVar("ClientT", bound=Any)
-DomainAclT = TypeVar("DomainAclT", bound=AclLayer)
-
-
-class Repository(ABC, Generic[ClientT, DomainAclT]):
-    def __init__(self, translation: DomainAclT, *args, **kwargs):
-        self._translator = translation
-        self._client: Optional[ClientT] = None
-
-        self.startup()
-        if not self.health():
-            raise Exception("Repository failed to start")
-
-    @property
-    def translator(self) -> DomainAclT:
-        return self._translator
-
-    # Lifecycle methods
-    async def startup(self) -> None:
-        await self._connect()
-        await self._on_startup()
-
-    async def health(self) -> bool:
-        return await self._on_health()
-
-    async def shutdown(self) -> None:
-        await self._disconnect()
-        await self._on_shutdown()
-
-    # To be implemented by subclasses
-    @abstractmethod
-    async def _disconnect(self) -> None:
-        raise NotImplementedError
+    Implementations receive a query and a list of document texts and return
+    scored results sorted by relevance descending.
+    """
 
     @abstractmethod
-    async def _connect(self) -> None:
-        raise NotImplementedError
+    async def rerank(
+        self,
+        query: str,
+        documents: list[str],
+        top_n: int,
+        model: str,
+        base_url: str,
+    ) -> list[RankedResult]:
+        """Rerank documents against a query.
 
-    # callback methods
-    async def _on_startup(self) -> None:
-        """Override in subclasses for custom startup behavior."""
-        logger.info("Repository started")
-
-    async def _on_health(self) -> bool:
-        """Override in subclasses for custom health check."""
-        logger.info("Repository health check")
-
-    async def _on_shutdown(self) -> None:
-        """Override in subclasses for custom shutdown behavior."""
-        logger.info("Repository shutdown")
+        Returns up to top_n RankedResult items sorted by score descending.
+        Each result's index refers to the position in the input documents list.
+        """
+        ...

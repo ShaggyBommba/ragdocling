@@ -3,6 +3,7 @@ from uuid import UUID, uuid5
 
 from typing_extensions import TypedDict
 
+from dacke.domain.values.attachment import AttachmentPayload
 from dacke.domain.values.chunk import ChunkID
 
 
@@ -10,8 +11,16 @@ class EmbeddingMetadata(TypedDict):
     """Metadata captured at embedding time."""
 
     model: str
+    origin: str
+    text: str
     dimensions: int
-    prompt_tokens: int | None
+    attachments: list[AttachmentPayload]
+    references: list[str]
+    pages: int | None
+    title: str | None
+    tags: list[str] | None
+    positive_queries: list[str] | None
+    negative_queries: list[str] | None
 
 
 @dataclass(frozen=True, slots=True)

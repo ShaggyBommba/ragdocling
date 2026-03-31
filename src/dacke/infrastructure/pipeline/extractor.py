@@ -27,11 +27,15 @@ from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 from dacke.application.ports.extractor import Extractor
 from dacke.domain.aggregates.document import Document
-from dacke.domain.entities.attachment import Attachment
+from dacke.domain.entities.attachment import (
+    Attachment,
+    ImageAttachment,
+    TableAttachment,
+)
 from dacke.domain.entities.chunk import Chunk
 from dacke.domain.exceptions import DomainError
 from dacke.domain.values.artifact import StoragePath
-from dacke.domain.values.attachment import AttachmentTypes, Content
+from dacke.domain.values.attachment import Content
 from dacke.domain.values.document import DocumentID, DocumentMetadata
 from dacke.domain.values.extraction import ExtractionSettings
 from dacke.domain.values.pipeline import PipelineID
@@ -74,7 +78,7 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
             options.ocr_options = EasyOcrOptions(
                 lang=request.ocr.languages,
                 force_full_page_ocr=False,
-                bitmap_area_threshold=0.05,
+                bitmap_area_threshold=0.01,
                 use_gpu=None,
             )
 
@@ -117,7 +121,7 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
                     concurrency=request.description.concurrency,
                     prompt=request.description.prompt,
                     scale=2.0,
-                    picture_area_threshold=0.5,
+                    picture_area_threshold=0.05,
                     classification_min_confidence=0.0,
                 )
             else:
@@ -126,7 +130,7 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
                         "smolvlm",
                         prompt=request.description.prompt,
                         scale=2.0,
-                        picture_area_threshold=0.5,
+                        picture_area_threshold=0.05,
                         classification_min_confidence=0.0,
                     )
                 )
@@ -145,7 +149,7 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
         serializer = Serializer()
 
         tokenizer_model: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-            config.embedding.model,
+            config.embedding.tokenizer_model,
             use_fast=True,
         )  # type: ignore
 
@@ -161,24 +165,26 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
         )
         return chunker
 
-    def _extract_image_attachments(
+    def _extract_table_attachments(
         self,
         document: DoclingDocument,
         folder: StoragePath,
         pipeline_id: PipelineID,
     ) -> dict[str, Attachment]:
-        """Extract images from the document and replace them with references."""
+        """Extract tables from the document and replace them with references."""
         attachments = {}
+
+        logging.info(f"Extracting {len(document.tables)} table(s)")
         for idx, item in enumerate(document.tables):
+            location = folder.resolve(f"table_{idx}.csv")
             content = item.export_to_dataframe(document)
             assert (
                 content is not None
-            ), f"Failed to extract image content for TableItem {item.self_ref}"
+            ), f"Failed to extract table content for TableItem {item.self_ref}"
 
-            attachment = Attachment.create(
+            attachment = TableAttachment.create(
                 pipeline_id=pipeline_id,
-                location=folder.resolve(f"table_{idx}.csv"),
-                attachment_type=AttachmentTypes.TABLE,
+                location=location,
                 metadata={"caption": item.caption_text(document)},
                 content=Content.from_csv(content),
             )
@@ -187,10 +193,11 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
                 attachment is not None
             ), f"Failed to create attachment for TableItem {item.self_ref}"
             attachments[item.self_ref] = attachment
+            logging.debug(f"Table {idx} ({item.self_ref}): caption='{item.caption_text(document)}'")
 
         return attachments
 
-    def _extract_table_attachments(
+    def _extract_image_attachments(
         self,
         document: DoclingDocument,
         folder: StoragePath,
@@ -198,25 +205,36 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
     ) -> dict[str, Attachment]:
         """Extract images from the document and replace them with references."""
         attachments = {}
+
+        logging.info(f"Extracting {len(document.pictures)} picture(s)")
         for idx, item in enumerate(document.pictures):
+            description = "Description not available"
             location = folder.resolve(f"picture_{idx}.jpg")
             content = item.get_image(document)
 
-            assert (
-                content is not None
-            ), f"Failed to extract image content for TableItem {item.self_ref}"
-            assert (
-                item.image is not None and item.image.uri is not None
-            ), f"PictureItem {item.self_ref} is missing image URI"
-            item.image.uri = AnyUrl(location.s3_uri)
+            assert content is not None, f"Failed to extract image {item.self_ref}"
+            assert item.image is not None and item.image.uri is not None
 
-            attachment = Attachment.create(
+            if item.meta and item.meta.description and item.meta.description.text:
+                description = item.meta.description.text
+                logging.debug(
+                    f"Picture {idx} ({item.self_ref}): description from meta.description.text"
+                )
+            else:
+                logging.warning(
+                    f"Picture {idx} ({item.self_ref}): no description — "
+                    f"meta={item.meta is not None}, "
+                    f"meta.description={getattr(item.meta, 'description', None) is not None}, "
+                    f"text='{getattr(getattr(item.meta, 'description', None), 'text', '')}'"
+                )
+
+            item.image.uri = AnyUrl(location.s3_uri)
+            attachment = ImageAttachment.create(
                 pipeline_id=pipeline_id,
                 location=location,
-                attachment_type=AttachmentTypes.IMAGE,
                 metadata={
                     "caption": item.caption_text(document),
-                    "description": getattr(item.meta, "description", None),
+                    "description": description,
                 },
                 content=Content.from_image(content),
             )
@@ -224,6 +242,10 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
                 attachment is not None
             ), f"Failed to create attachment for PictureItem {item.self_ref}"
             attachments[item.self_ref] = attachment
+            logging.debug(
+                f"Picture {idx} ({item.self_ref}): stored at {location.s3_uri}, "
+                f"caption='{item.caption_text(document)}'"
+            )
 
         return attachments
 
@@ -252,17 +274,17 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
         pipeline_id: PipelineID,
         extraction_settings: ExtractionSettings,
         url: AnyUrl,
+        metadata: DocumentMetadata,
     ) -> Document:
 
         result = Document(
             identity=DocumentID.from_ref("filename", pipeline_id=pipeline_id),
-            metadata=DocumentMetadata(
-                title="#Filename", source_url=url.encoded_string()
-            ),
+            metadata=metadata,
         )
+        options = self.pdf(extraction_settings)
 
         logging.info(
-            f"Starting extraction for URL: {url} with config: {extraction_settings}"
+            f"Starting extraction for URL: {url} with config: {options.model_dump_json(indent=2)}"
         )
         converter = DocumentConverter(
             allowed_formats=[
@@ -279,13 +301,10 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
                 InputFormat.VTT,
                 InputFormat.LATEX,
             ],
-            format_options={
-                InputFormat.PDF: PdfFormatOption(
-                    pipeline_options=self.pdf(extraction_settings)
-                )
-            },
+            format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=options)},
         )
 
+        logging.info(f"Converting document: {url}")
         conversion = converter.convert(str(url))
         doc = conversion.document
 
@@ -293,23 +312,46 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
         if doc is None:
             raise DomainError(f"Failed to convert document {url}: No document produced")
 
+        logging.info(
+            f"Conversion complete: {len(doc.texts)} text blocks, "
+            f"{len(doc.tables)} tables, {len(doc.pictures)} pictures"
+        )
+
         chunker = self.chunker(extraction_settings)
         attachments = self._extract_attachments(
             document=doc,
             folder=folder,
             pipeline_id=pipeline_id,
         )
+        logging.info(f"Extracted {len(attachments)} attachment(s)")
 
-        assert doc is not None, "Document conversion failed, no document produced"
+        chunks_created = 0
+        attachments_linked = 0
         for idx, element in enumerate(chunker.chunk(doc)):
+
+            assert element.meta is not None, f"Chunk {idx} is missing metadata"
+
+            pages = (
+                sorted(
+                    {
+                        prov.page_no
+                        for item in getattr(element.meta, "doc_items", [])
+                        for prov in getattr(item, "prov", [])
+                    }
+                )
+                or None
+            )
+            headings = getattr(element.meta, "headings", None)
+            title = headings[0] if headings else None
 
             chunk = Chunk.create(
                 content=element.text,
                 document_id=result.identity,
                 reference=f"#Filename/#chunk-{idx}",
+                origin=metadata["origin"],
+                pages=pages,
+                title=title,
             )
-
-            assert element.meta is not None, f"Chunk {idx} is missing metadata"
 
             for item in getattr(element.meta, "doc_items", []):
                 reference = getattr(item, "self_ref", None)
@@ -318,7 +360,18 @@ class DoclingExtractor(Extractor[ExtractionSettings, Document]):
                 ), f"Doc item in chunk {idx} is missing self_ref"
                 if reference in attachments:
                     chunk.add_attachment(attachments.pop(reference))
+                    attachments_linked += 1
 
             result.add_chunk(chunk)
+            chunks_created += 1
+            logging.debug(
+                f"Chunk {idx}: pages={pages}, title='{title}', "
+                f"len={len(element.text)}, attachments={len(chunk.attachments)}"
+            )
 
+        logging.info(
+            f"Chunking complete: {chunks_created} chunk(s), "
+            f"{attachments_linked} attachment(s) linked, "
+            f"{len(attachments)} attachment(s) unlinked"
+        )
         return result

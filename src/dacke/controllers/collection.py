@@ -4,7 +4,7 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 
 from dacke.domain.values.collection import CollectionID
 from dacke.domain.values.workspace import WorkspaceID
-from dacke.dto.collection import CollectionDTO, CreateCollectionDTO, UpdateCollectionDTO
+from dacke.dto.collection import CollectionDTO, CreateCollectionBodyDTO, CreateCollectionDTO, UpdateCollectionDTO
 from dacke.infrastructure.dependencies import App, get_app
 
 logger = logging.getLogger(__name__)
@@ -29,9 +29,10 @@ async def _workspace_exists_or_404(app: App, workspace_id: str) -> None:
 @router.post("", response_model=CollectionDTO)
 async def create_collection(
     workspace_id: str = Path(...),
-    request: CreateCollectionDTO = Body(...),
+    body: CreateCollectionBodyDTO = Body(...),
     app: App = Depends(application),
 ) -> CollectionDTO:
+    request = CreateCollectionDTO(workspace_id=workspace_id, name=body.name)
     logger.info(f"Received request to create collection: {request}")
     try:
         await _workspace_exists_or_404(app, workspace_id)

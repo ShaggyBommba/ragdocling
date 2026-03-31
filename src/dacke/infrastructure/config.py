@@ -21,6 +21,8 @@ class AppSettings(BaseSettings):
     minio_secret_key: str = "minioadmin"
     celery_broker_url: str = "redis://localhost:6379/0"
     celery_result_backend_url: str = "redis://localhost:6379/1"
+    embedder_base_url: str = "http://localhost:1234"
+    qdrant_url: str = "http://localhost:6333"
     logging: LoggingSettings = LoggingSettings()
     model_config = SettingsConfigDict(
         env_file=".env",

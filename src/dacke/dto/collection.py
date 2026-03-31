@@ -4,6 +4,10 @@ from dacke.domain.aggregates.collection import Collection
 from dacke.domain.values.workspace import WorkspaceID
 
 
+class CreateCollectionBodyDTO(BaseModel):
+    name: str
+
+
 class CreateCollectionDTO(BaseModel):
     workspace_id: str
     name: str

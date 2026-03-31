@@ -46,6 +46,7 @@ class OpenAIEmbedder(Embedder):
             data = response.json()
 
         embeddings = sorted(data["data"], key=lambda item: item["index"])
+
         prompt_tokens: int | None = data.get("usage", {}).get("prompt_tokens")
 
         logger.info(
@@ -55,10 +56,7 @@ class OpenAIEmbedder(Embedder):
 
         return [
             Embedding.create(
-                chunk=chunk,
-                model=settings.model,
-                vector=item["embedding"],
-                prompt_tokens=prompt_tokens,
+                chunk=chunk, model=settings.model, vector=item["embedding"]
             )
-            for chunk, item in zip(chunks, embeddings)
+            for chunk, item in zip(chunks, embeddings, strict=True)
         ]

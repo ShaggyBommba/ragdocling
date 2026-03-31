@@ -1,17 +1,13 @@
 import logging
 
-from fastapi import APIRouter, Depends, File, HTTPException, Path, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, Path, Query, UploadFile
+from pydantic import AnyUrl
 
 from dacke.application.exceptions import UseCaseError
-
 from dacke.domain.values.artifact import ArtifactID
-
 from dacke.domain.values.collection import CollectionID
-
 from dacke.domain.values.workspace import WorkspaceID
-
 from dacke.dto.artifact import ArtifactDeleteDTO, ArtifactDTO, ArtifactUploadDTO
-
 from dacke.infrastructure.dependencies import App, get_app
 
 logger = logging.getLogger(__name__)
@@ -42,6 +38,9 @@ async def upload_artifact(
     workspace_id: str = Path(...),
     collection_id: str = Path(...),
     file: UploadFile = File(...),
+    source: AnyUrl = Query(
+        "http://localhost", description="Original source URL of the artifact"
+    ),
     app: App = Depends(get_app),
 ) -> ArtifactDTO:
     """Upload a file to a collection."""
@@ -57,6 +56,7 @@ async def upload_artifact(
             file=content,
             filename=file.filename,
             content_type=file.content_type or "application/octet-stream",
+            source=source,
         )
 
         result = await app.upload_file_use_case.execute(dto)

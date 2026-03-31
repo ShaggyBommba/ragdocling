@@ -2,7 +2,6 @@ import hashlib
 import io
 from dataclasses import replace
 from datetime import datetime
-from typing import Optional, Union
 
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -52,7 +51,7 @@ class Artifact(BaseModel):
     updated_at: datetime = Field(default_factory=datetime.now)
 
     # Internal binary content, excluded from repr to avoid memory issues
-    _content: Optional[bytes] = PrivateAttr(default=None)
+    _content: bytes | None = PrivateAttr(default=None)
 
     @classmethod
     def create(
@@ -60,7 +59,7 @@ class Artifact(BaseModel):
         collection_id: CollectionID,
         metadata: ArtifactMetadata,
         address: ObjectAddress,
-        content: Optional[bytes] = None,
+        content: bytes | None = None,
     ) -> "Artifact":
         instance = cls(
             collection_id=collection_id,
@@ -84,7 +83,7 @@ class Artifact(BaseModel):
     def size_mb(self) -> float:
         return self.metadata.size_mb
 
-    def set_content(self, content: Union[bytes, io.BytesIO]) -> None:
+    def set_content(self, content: bytes | io.BytesIO) -> None:
         """
         Assigns content from raw bytes or a BytesIO stream.
         Automatically handles stream seeking and metadata updates.

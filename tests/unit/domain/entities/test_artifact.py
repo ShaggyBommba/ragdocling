@@ -1,6 +1,7 @@
 import io
 
 import pytest
+from pydantic import AnyUrl
 
 from dacke.domain.aggregates.artifact import Artifact
 from dacke.domain.exceptions import DomainError
@@ -18,7 +19,7 @@ class TestArtifactCreation:
     def artifact_metadata(self) -> ArtifactMetadata:
         return ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=0,
             mime_type="application/pdf",
             checksum="abc123",
@@ -76,7 +77,7 @@ class TestArtifactContent:
     def artifact(self) -> Artifact:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=0,
             mime_type="application/pdf",
             checksum="abc123",
@@ -134,7 +135,7 @@ class TestArtifactBlob:
     def artifact_with_content(self) -> Artifact:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=0,
             mime_type="application/pdf",
             checksum="abc123",
@@ -153,7 +154,7 @@ class TestArtifactBlob:
     def artifact_without_content(self) -> Artifact:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=0,
             mime_type="application/pdf",
             checksum="abc123",
@@ -182,7 +183,7 @@ class TestArtifactSizes:
     def artifact_1kb(self) -> Artifact:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024,
             mime_type="application/pdf",
             checksum="abc123",
@@ -197,7 +198,7 @@ class TestArtifactSizes:
     def artifact_1mb(self) -> Artifact:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024 * 1024,
             mime_type="application/pdf",
             checksum="abc123",
@@ -217,7 +218,7 @@ class TestArtifactSizes:
     def test_size_kb_fractional(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=512,
             mime_type="application/pdf",
             checksum="abc123",
@@ -234,7 +235,7 @@ class TestArtifactInvariants:
     def test_artifact_created_at_before_updated_at(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024,
             mime_type="application/pdf",
             checksum="abc123",
@@ -249,7 +250,7 @@ class TestArtifactInvariants:
     def test_artifact_address_matches_metadata_filename(self) -> None:
         metadata = ArtifactMetadata.create(
             filename="document.pdf",
-            source="upload",
+            source=AnyUrl("https://example.com/document.pdf"),
             size_bytes=1024,
             mime_type="application/pdf",
             checksum="abc123",

@@ -30,7 +30,6 @@ class Embedding(BaseModel):
         chunk: Chunk,
         model: str,
         vector: list[float],
-        prompt_tokens: int | None = None,
     ) -> "Embedding":
         return cls(
             identity=EmbeddingID.from_chunk(chunk.identity),
@@ -38,7 +37,19 @@ class Embedding(BaseModel):
             vector=vector,
             metadata=EmbeddingMetadata(
                 model=model,
+                origin=str(chunk.metadata.get("origin", "")),
+                text=chunk.content,
                 dimensions=len(vector),
-                prompt_tokens=prompt_tokens,
+                attachments=[
+                    item.payload
+                    for item in chunk.get_attachments()
+                    if item.payload.get("type") in ["image"]
+                ],
+                references=chunk.metadata.get("urls", []) or [],
+                pages=min(pages) if (pages := chunk.metadata.get("pages") or []) else None,
+                title=chunk.metadata.get("title"),
+                tags=chunk.metadata.get("tags", []),
+                positive_queries=chunk.metadata.get("positive_queries"),
+                negative_queries=chunk.metadata.get("negative_queries"),
             ),
         )
