@@ -94,7 +94,7 @@ class TextEnhancerTransformer(Transformer[Document, Document]):
                 *[self._enhance(client, chunk) for chunk in chunks]
             )
 
-        for chunk, enhanced in zip(chunks, results):
+        for chunk, enhanced in zip(chunks, results, strict=False):
             chunk.content = enhanced
 
         logging.info(f"TextEnhancerTransformer: done — {len(chunks)} chunk(s) enhanced")

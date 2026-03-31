@@ -117,7 +117,7 @@ class QdrantEmbeddingRepository(Repository):
             )
         if origins:
             conditions.append(FieldCondition(key="origin", match=MatchAny(any=origins)))
-        query_filter = Filter(must=conditions) if conditions else None
+        query_filter = Filter(must=conditions) if conditions else None  # type: ignore[arg-type]
 
         try:
             result = await self._client.query_points(
@@ -190,7 +190,7 @@ class QdrantEmbeddingRepository(Repository):
 
         try:
             while True:
-                batch, next_offset = await self._client.scroll(  # type: ignore[assignment]
+                batch, next_offset = await self._client.scroll(
                     collection_name=collection_name,
                     scroll_filter=scroll_filter,
                     limit=100,

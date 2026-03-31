@@ -85,7 +85,7 @@ class ContextualSummaryTransformer(Transformer[Document, Document]):
             )
 
         enriched = 0
-        for chunk, summary in zip(chunks, summaries):
+        for chunk, summary in zip(chunks, summaries, strict=False):
             if summary:
                 chunk.content = f"{summary}\n\n{chunk.content}"
                 enriched += 1

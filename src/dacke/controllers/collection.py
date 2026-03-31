@@ -4,7 +4,12 @@ from fastapi import APIRouter, Body, Depends, HTTPException, Path, status
 
 from dacke.domain.values.collection import CollectionID
 from dacke.domain.values.workspace import WorkspaceID
-from dacke.dto.collection import CollectionDTO, CreateCollectionBodyDTO, CreateCollectionDTO, UpdateCollectionDTO
+from dacke.dto.collection import (
+    CollectionDTO,
+    CreateCollectionBodyDTO,
+    CreateCollectionDTO,
+    UpdateCollectionDTO,
+)
 from dacke.infrastructure.dependencies import App, get_app
 
 logger = logging.getLogger(__name__)
